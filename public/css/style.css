@@ -1,0 +1,82 @@
+/* General body styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Header styles */
+h1 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Game board styles */
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(6, 100px);
+    grid-template-rows: repeat(6, 100px);
+    gap: 10px;
+}
+
+/* Individual card styles */
+.card {
+    width: 100px;
+    height: 100px;
+    background-color: #fff;
+    border: 2px solid #007bff;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: transparent; /* Hide card content initially */
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.card.flipped {
+    color: #333; /* Show card content */
+    background-color: #e7f1ff;
+}
+
+/* Timer styles */
+#timer {
+    margin: 20px;
+    font-size: 20px;
+    color: #555;
+}
+
+/* Reset button styles */
+#reset-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#reset-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Scores page styles */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    margin: 10px 0;
+    font-size: 18px;
+    color: #333;
+}
