@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Scores</title>
-</head>
-<body>
-    <h1>Scores</h1>
+  </head>
+  <body>
+    <!-- Highest Score Section -->
+    <div id="highest-score-container">
+      <h2>Highest Score</h2>
+      <p id="highest-score">
+        <%= scores.length > 0 ? `${scores.reduce((best, current) =>
+        (current.time < best.time ? current : best)).username}: ${
+        scores.reduce((best, current) => (current.time < best.time ? current :
+        best)).time } seconds` : 'No scores yet.' %>
+      </p>
+    </div>
+
+    <h2>All Scores</h2>
+
     <ul>
-        <% scores.forEach(score => { %>
-            <li><%= score.username %>: <%= score.time %> seconds</li>
-        <% }) %>
+      <% scores.forEach(score => { %>
+      <li><%= score.username %>: <%= score.time %> seconds</li>
+      <% }) %>
     </ul>
+
     <a href="/">Play Again</a>
-</body>
+  </body>
 </html>

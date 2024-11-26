@@ -1,18 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Card Guessing Game</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <div id="game">
-        <h1>Programming Languages Card Guessing Game</h1>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      /* Flex container for game and instructions */
+      #game-container {
+        display: flex;
+        gap: 20px;
+      }
+
+      /* Instructions styling */
+      #instructions {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        flex: 1;
+        padding: 20px;
+      }
+
+      /* Button styling */
+      .btn {
+        margin-top: 10px;
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .btn:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Programming Languages Card Guessing Game</h1>
+
+    <!-- Username Input Form -->
+    <div id="username-container">
+      <form id="username-form">
+        <label for="username-input">Enter your username:</label>
+        <input type="text" id="username-input" name="username" required />
+        <button type="submit" class="btn">Start Game</button>
+      </form>
+    </div>
+
+    <!-- Game Content -->
+    <div id="game-container" style="display: none">
+      <!-- Game Section -->
+      <div id="game">
         <div id="timer">Time: 00:00:00</div>
+
+        <!--Game board-->
         <div id="game-board"></div>
-        <button id="reset-btn">Reset Game</button>
+
+        <button id="reset-btn" class="btn">Reset Game</button>
+
+        <a href="/scores" class="btn">View Scores</a>
+
+        <!-- Submit Score Form -->
+        <form action="/submit-score" method="POST" id="submit-score-form">
+          <input type="hidden" name="username" value="" id="username" />
+          <input type="hidden" name="time" value="0" id="time" />
+          <button type="submit" class="btn">Submit Score</button>
+        </form>
       </div>
+
+      <!-- Instructions Section -->
+      <div id="instructions">
+        <h2>How to Play</h2>
+        <ol>
+          <li>Enter your username and click "Start Game" to begin.</li>
+          <li>Flip two cards at a time to find a matching pair.</li>
+          <li>
+            If the cards match, they remain flipped. Otherwise, they are turned
+            back over.
+          </li>
+          <li>
+            Complete the game as quickly as possible to get a better score.
+          </li>
+          <li>Submit your score once you finish the game.</li>
+        </ol>
+
+        <h2>Highest Score</h2>
+        <p id="highest-score">Fetching...</p>
+      </div>
+    </div>
+
+    <!-- Game Script -->
     <script src="/js/game.js"></script>
-</body>
+
+    <script>
+      let isGameComplete = false; // Flag to check if the game is complete
+
+      // Mock function to simulate game completion
+      function completeGame() {
+        isGameComplete = true; // Mark the game as completed
+        alert("Congratulations! You've completed the game.");
+      }
+
+      // Add a check in the Submit Score button
+      document
+        .getElementById("submit-score-form")
+        .addEventListener("submit", function (event) {
+          if (!isGameComplete) {
+            event.preventDefault();
+            alert("You need to finish the game before submitting your score.");
+            return;
+          }
+        });
+    </script>
+
+    <!-- Username and Timer Script -->
+    <script>
+      document
+        .getElementById("username-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          // Get the username from the input field
+          const usernameInput = document.getElementById("username-input").value;
+
+          if (usernameInput.trim() === "") {
+            alert("Please enter a valid username.");
+            return;
+          }
+
+          // Set the username in the hidden input field for score submission
+          document.getElementById("username").value = usernameInput;
+
+          // Hide the username input form and show the game content
+          document.getElementById("username-container").style.display = "none";
+          document.getElementById("game-container").style.display = "flex";
+        });
+
+      // Timer functionality
+      let elapsedTime = 0;
+      const timerElement = document.getElementById("timer");
+      const timeInput = document.getElementById("time");
+
+      setInterval(() => {
+        elapsedTime++;
+        timerElement.textContent = `Time: ${elapsedTime}s`;
+        timeInput.value = elapsedTime; // Update hidden input with elapsed time
+      }, 1000);
+    </script>
+
+    <script>
+      // Fetch and display the highest score
+      async function fetchHighestScore() {
+        try {
+          const response = await fetch("http://localhost:3000/highest-score");
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          const highestScoreElement = document.getElementById("highest-score");
+          highestScoreElement.textContent = `${data.username}: ${data.time} seconds`;
+        } catch (error) {
+          console.error("Error fetching highest score:", error);
+          document.getElementById("highest-score").textContent =
+            "No scores yet.";
+        }
+      }
+
+      // Fetch the highest score when the game loads
+      fetchHighestScore();
+    </script>
+  </body>
 </html>
