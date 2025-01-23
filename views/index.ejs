@@ -6,13 +6,10 @@
     <title>Card Guessing Game</title>
     <link rel="stylesheet" href="/css/style.css" />
     <style>
-      /* Flex container for game and instructions */
       #game-container {
         display: flex;
         gap: 20px;
       }
-
-      /* Instructions styling */
       #instructions {
         display: flex;
         flex-direction: column;
@@ -20,8 +17,6 @@
         flex: 1;
         padding: 20px;
       }
-
-      /* Button styling */
       .btn {
         margin-top: 10px;
         padding: 10px 15px;
@@ -31,7 +26,6 @@
         border-radius: 5px;
         cursor: pointer;
       }
-
       .btn:hover {
         background-color: #0056b3;
       }
@@ -39,8 +33,6 @@
   </head>
   <body>
     <h1>Programming Languages Card Guessing Game</h1>
-
-    <!-- Username Input Form -->
     <div id="username-container">
       <form id="username-form">
         <label for="username-input">Enter your username:</label>
@@ -49,127 +41,168 @@
       </form>
     </div>
 
-    <!-- Game Content -->
     <div id="game-container" style="display: none">
-      <!-- Game Section -->
       <div id="game">
         <div id="timer">Time: 00:00:00</div>
-
-        <!--Game board-->
         <div id="game-board"></div>
-
-        <button id="reset-btn" class="btn">Reset Game</button>
-
+        <button id="reset" class="btn">Reset Game</button>
         <a href="/scores" class="btn">View Scores</a>
-
-        <!-- Submit Score Form -->
         <form action="/submit-score" method="POST" id="submit-score-form">
-          <input type="hidden" name="username" value="" id="username" />
-          <input type="hidden" name="time" value="0" id="time" />
+          <input type="hidden" name="username" id="username" />
+          <input type="hidden" name="time" id="time" />
           <button type="submit" class="btn">Submit Score</button>
         </form>
       </div>
 
-      <!-- Instructions Section -->
       <div id="instructions">
         <h2>How to Play</h2>
         <ol>
           <li>Enter your username and click "Start Game" to begin.</li>
           <li>Flip two cards at a time to find a matching pair.</li>
           <li>
-            If the cards match, they remain flipped. Otherwise, they are turned
-            back over.
+            If the cards match, they remain flipped. Otherwise, they turn back
+            over.
           </li>
           <li>
             Complete the game as quickly as possible to get a better score.
           </li>
-          <li>Submit your score once you finish the game.</li>
+          <li>
+            Submit your score once you finish the game(YOU WONT BE ABLE TO
+            SUBMIT IF YOU DONT FINISH THE GAME)!!!
+          </li>
         </ol>
-
         <h2>Highest Score</h2>
         <p id="highest-score">Fetching...</p>
       </div>
     </div>
 
-    <!-- Game Script -->
     <script src="/js/game.js"></script>
-
     <script>
-      let isGameComplete = false; // Flag to check if the game is complete
+      const timerElement = document.getElementById("timer");
+      const timeInput = document.getElementById("time");
+      const totalPairs = document.querySelectorAll(".card").length / 2;
 
-      // Mock function to simulate game completion
-      function completeGame() {
-        isGameComplete = true; // Mark the game as completed
-        alert("Congratulations! You've completed the game.");
+      let timer;
+      let matchedPairs = 0;
+      let elapsedTime = 0;
+      let timerDisplay = "Time: 0s";
+
+      function startTimer() {
+        stopTimer(); // Clear any existing timer
+        timerInterval = setInterval(() => {
+          elapsedTime++;
+        }, 1000);
       }
 
-      // Add a check in the Submit Score button
-      document
-        .getElementById("submit-score-form")
-        .addEventListener("submit", function (event) {
-          if (!isGameComplete) {
-            event.preventDefault();
-            alert("You need to finish the game before submitting your score.");
-            return;
-          }
-        });
-    </script>
+      function stopTimer() {
+        clearInterval(timer);
+      }
 
-    <!-- Username and Timer Script -->
-    <script>
+      const submitButton = document
+        .getElementById("submit-score-form")
+        .querySelector("button");
+      submitButton.disabled = true;
+
       document
         .getElementById("username-form")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
-
-          // Get the username from the input field
-          const usernameInput = document.getElementById("username-input").value;
-
-          if (usernameInput.trim() === "") {
+        .addEventListener("submit", (e) => {
+          e.preventDefault();
+          const username = document
+            .getElementById("username-input")
+            .value.trim();
+          if (!username) {
             alert("Please enter a valid username.");
             return;
           }
-
-          // Set the username in the hidden input field for score submission
-          document.getElementById("username").value = usernameInput;
-
-          // Hide the username input form and show the game content
+          document.getElementById("username").value = username;
           document.getElementById("username-container").style.display = "none";
           document.getElementById("game-container").style.display = "flex";
+          startTimer();
         });
 
-      // Timer functionality
-      let elapsedTime = 0;
-      const timerElement = document.getElementById("timer");
-      const timeInput = document.getElementById("time");
-
-      setInterval(() => {
-        elapsedTime++;
-        timerElement.textContent = `Time: ${elapsedTime}s`;
-        timeInput.value = elapsedTime; // Update hidden input with elapsed time
-      }, 1000);
-    </script>
-
-    <script>
-      // Fetch and display the highest score
-      async function fetchHighestScore() {
+      const getScores = () => {
         try {
-          const response = await fetch("http://localhost:3000/highest-score");
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          const data = await response.json();
-          const highestScoreElement = document.getElementById("highest-score");
-          highestScoreElement.textContent = `${data.username}: ${data.time} seconds`;
+          const data = fs.readFileSync(dbPath, "utf8");
+          return JSON.parse(data.scores || []).filter(
+            (score) => score.username && typeof score.time === "number"
+          ); // Ensure the 'scores' key is present
         } catch (error) {
-          console.error("Error fetching highest score:", error);
+          console.error("Error reading db.json:", error);
+          return [];
+        }
+      };
+
+      const saveScores = (scores) => {
+        try {
+          const data = JSON.stringify({ scores }, null, 2); // Pretty print JSON with indentation
+          fs.writeFileSync(dbPath, data, "utf8");
+          console.log("Scores saved to db.json");
+        } catch (error) {
+          console.error("Error writing to db.json:", error);
+        }
+      };
+
+      document
+        .getElementById("submit-score-form")
+        .addEventListener("submit", (e) => {
+          e.preventDefault(); // Prevent form submission
+
+          const username = document.getElementById("username").value;
+          const timeText = document.getElementById("timer").textContent;
+
+          // Extract time in seconds from "Time: XX:XX:XX"
+          const timeParts = timeText.split(" ")[1].split(":");
+          const time =
+            parseInt(timeParts[0]) * 60 * 60 +
+            parseInt(timeParts[1]) * 60 +
+            parseInt(timeParts[2]);
+
+          fetch("http://localhost:3000/submit-score", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, time }), // Include parsed time
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              alert(data.message);
+            })
+            .catch((error) => {
+              alert(error.message); // Handle errors
+            });
+        });
+
+      fetch("http://localhost:3000/highest-score")
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById(
+            "highest-score"
+          ).textContent = `${data.username}: ${data.time} seconds`;
+        })
+        .catch(() => {
           document.getElementById("highest-score").textContent =
             "No scores yet.";
+        });
+      const checkMatch = () => {
+        if (firstCard.dataset.value === secondCard.dataset.value) {
+          matchedPairs++;
+          if (matchedPairs === programmingLanguages.length / 2) {
+            stopTimer();
+            alert(
+              "You’ve matched all the programming languages! Well done! Submit your score"
+            );
+            submitButton.disabled = false;
+          }
+          firstCard = secondCard = null;
+        } else {
+          setTimeout(() => {
+            firstCard.classList.remove("flipped");
+            secondCard.classList.remove("flipped");
+            firstCard = secondCard = null;
+          }, 1000);
         }
-      }
-
-      // Fetch the highest score when the game loads
-      fetchHighestScore();
+      };
     </script>
   </body>
 </html>

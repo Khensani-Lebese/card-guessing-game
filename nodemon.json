@@ -1,0 +1,5 @@
+{
+  "watch": ["server", "views", "public"],
+  "ext": "js, ejs",
+  "ignore": ["public/assets/*"]
+}

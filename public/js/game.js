@@ -3,9 +3,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const timerDisplay = document.getElementById("timer");
   let timer;
   let timeElapsed = 0;
-  let highScoreTime;
+  let matchedPairs = 0;
+  let firstCard = null;
+  let secondCard = null;
 
-  // Array containing 18 pairs of programming languages for a total of 36 cards
   const programmingLanguages = [
     "JavaScript",
     "JavaScript",
@@ -45,95 +46,47 @@ document.addEventListener("DOMContentLoaded", () => {
     "Perl",
   ];
 
-  let firstCard = null;
-  let secondCard = null;
-  let matchedPairs = 0;
-
-  const fetchHighScore = async () => {
-    const response = await fetch("/scores");
-    const scores = await response.json();
-    highScoreTime =
-      scores.length > 0
-        ? Math.min(...scores.map((score) => score.time))
-        : Infinity;
-  };
-
   const startTimer = () => {
+    if (timer) return; // Prevent multiple timers from being set.
+
     timer = setInterval(() => {
       timeElapsed++;
-      timerDisplay.textContent = `Time: ${new Date(timeElapsed * 1000)
+      const formattedTime = new Date(timeElapsed * 1000)
         .toISOString()
-        .substr(11, 8)}`;
+        .substr(11, 8);
+      timerDisplay.textContent = `Time: ${formattedTime}`;
     }, 1000);
   };
 
+  const submitButton = document
+    .getElementById("submit-score-form")
+    .querySelector("button");
+  submitButton.disabled = true;
+
   const stopTimer = () => clearInterval(timer);
-
-  const resetGame = () => {
-    timeElapsed = 0;
-    timerDisplay.textContent = "Time: 00:00:00";
-    stopTimer();
-    matchedPairs = 0;
-    firstCard = null;
-    secondCard = null;
-    gameBoard.innerHTML = "";
-    initializeGame();
-  };
-
-  const shuffleArray = (array) => {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-  };
 
   const checkMatch = () => {
     if (firstCard.dataset.value === secondCard.dataset.value) {
       matchedPairs++;
       if (matchedPairs === programmingLanguages.length / 2) {
         stopTimer();
-        setTimeout(() => handleWin(), 500);
+        alert(
+          "You’ve matched all the programming languages! Well done! Submit your score"
+        );
+        submitButton.disabled = false;
       }
-      firstCard = null;
-      secondCard = null;
+      firstCard = secondCard = null;
     } else {
       setTimeout(() => {
         firstCard.classList.remove("flipped");
         secondCard.classList.remove("flipped");
-        firstCard.textContent = "";
-        secondCard.textContent = "";
-        firstCard = null;
-        secondCard = null;
+        firstCard = secondCard = null;
       }, 1000);
     }
   };
 
-  const handleWin = () => {
-    if (timeElapsed < highScoreTime) {
-      const username = prompt(
-        "Amazing! You set a new record! Enter your name, Programming Champion:"
-      );
-      if (username) saveHighScore(username, timeElapsed);
-    } else {
-      alert("You’ve matched all the programming languages! Well done!");
-    }
-  };
-
-  const saveHighScore = (username, time) => {
-    fetch("/save-score", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, time }),
-    })
-      .then((response) => response.json())
-      .then((data) => alert(data.message))
-      .catch((error) => console.error("Error saving score:", error));
-  };
-
-  const cardClick = (event) => {
-    const card = event.target;
+  const cardClick = (e) => {
+    const card = e.target;
     if (!card.classList.contains("flipped") && !firstCard) {
       card.classList.add("flipped");
       card.textContent = card.dataset.value;
@@ -147,49 +100,17 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const initializeGame = () => {
-    shuffleArray(programmingLanguages);
+    gameBoard.innerHTML = "";
+    programmingLanguages.sort(() => 0.5 - Math.random());
     programmingLanguages.forEach((language) => {
-      const cardElement = document.createElement("div");
-      cardElement.classList.add("card");
-      cardElement.dataset.value = language;
-      cardElement.textContent = ""; // Initially hide the item
-      cardElement.addEventListener("click", cardClick);
-      gameBoard.appendChild(cardElement);
+      const card = document.createElement("div");
+      card.classList.add("card");
+      card.dataset.value = language;
+      card.addEventListener("click", cardClick);
+      gameBoard.appendChild(card);
     });
     startTimer();
-    fetchHighScore();
   };
 
-  function completeGame() {
-    isGameComplete = true; // Mark the game as complete
-    alert("Congratulations! You've completed the game!");
-  }
-
-  // Example: Check if the game is complete
-  function checkGameCompletion() {
-    const unmatchedCards = document.querySelectorAll(".card:not(.matched)");
-    if (unmatchedCards.length === 0) {
-      completeGame(); // Call this when the game is finished
-    }
-  }
-
-  // Example: Call this whenever a pair is matched
-  function onPairMatched() {
-    // Check if the game is now complete
-    checkGameCompletion();
-  }
-
-  document.getElementById("reset-btn").addEventListener("click", resetGame);
   initializeGame();
 });
-
-// Add a check in the Submit Score button
-document
-  .getElementById("submit-score-form")
-  .addEventListener("submit", function (event) {
-    if (!isGameComplete) {
-      event.preventDefault();
-      alert("You need to finish the game before submitting your score.");
-      return;
-    }
-  });
