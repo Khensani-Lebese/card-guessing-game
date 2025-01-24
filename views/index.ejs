@@ -45,7 +45,6 @@
       <div id="game">
         <div id="timer">Time: 00:00:00</div>
         <div id="game-board"></div>
-        <button id="reset" class="btn">Reset Game</button>
         <a href="/scores" class="btn">View Scores</a>
         <form action="/submit-score" method="POST" id="submit-score-form">
           <input type="hidden" name="username" id="username" />
@@ -70,6 +69,8 @@
             Submit your score once you finish the game(YOU WONT BE ABLE TO
             SUBMIT IF YOU DONT FINISH THE GAME)!!!
           </li>
+
+          <li>Refresh the page to RESET GAME</li>
         </ol>
         <h2>Highest Score</h2>
         <p id="highest-score">Fetching...</p>
